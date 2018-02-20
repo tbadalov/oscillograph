@@ -1,0 +1,118 @@
+circle_origin_x = 0.3 * WINDOW_XSIZE
+circle_origin_y = 0
+radius = 0.15 * WINDOW_XSIZE
+period = 3 //in seconds
+border_x = 0.05 * WINDOW_XSIZE
+
+filename = "sin.gif"
+
+steps = 130
+screen = get_screen()
+anim = clone(screen)
+create_anim(anim)
+anim.fps = steps / period
+main()
+
+fn main() {
+    
+	$delay = period * 1000 / steps
+	$period_coeff = 1.0 * 100 * M_PI / ( 2 * M_PI * 1.0 )
+	$i = 0
+	while 1 == 1
+	{
+		clear(WHITE)
+		$angle = 1.0 * ($i / steps ) * 2 * M_PI
+		transp(180)
+		draw_grid(circle_origin_x, circle_origin_y, radius, #CCCCCC)
+		transp(255)
+		draw_circle(circle_origin_x, circle_origin_y, radius, RED)
+		draw_radius(circle_origin_x, circle_origin_y, radius, $angle, RED)
+		draw_connector(circle_origin_x, circle_origin_y, radius, $angle, RED)
+		draw_sin(-300, border_x, radius, 100 * M_PI, RED, $angle)
+		$i = ($i + 1) % steps
+		frame($delay)
+        copy(anim, screen)
+        pack_frame(anim)
+        clone_frame(anim)
+        anim.frame + 1
+		
+		while get_event()
+		{
+			if EVT[ EVT_TYPE] == EVT_QUIT
+			{
+				save(anim, filename, FORMAT_GIF)
+				halt
+			}
+		}
+	}
+}
+
+fn draw_grid($x, $y, $radius, $color) {
+	$left_x = -WINDOW_XSIZE/2
+	$right_x = WINDOW_XSIZE/2
+	$up_y = -WINDOW_YSIZE/2
+	$bottom_y = WINDOW_YSIZE/2
+	line($left_x, $y, $right_x, $y, $color)
+	line($left_x, $y+$radius, $right_x, $y+$radius, $color)
+	line($left_x, $y-$radius, $right_x, $y-$radius, $color)
+	line($x-$radius, $up_y, $x-$radius, $bottom_y, $color)
+	line($x+$radius, $up_y, $x+$radius, $bottom_y, $color)
+	line($x, $up_y, $x, $bottom_y, $color)
+	line(border_x, $up_y, border_x, $bottom_y, $color)
+}
+
+fn calc_sin($angle, $amplitude, $period_coeff) {
+	ret ( 1.0 * sin($angle / $period_coeff) * $amplitude )
+}
+
+fn draw_sin($start_x, $end_x, $amplitude, $period, $color, $angle) {
+	$period_coeff = 1.0 * $period / (2 * M_PI)
+	$step_size = ($end_x - $start_x) / steps
+	$prev_x = $end_x
+	$shift_angle = $angle * $period_coeff - $end_x
+	$prev_y = -1 * calc_sin($prev_x + $shift_angle, $amplitude, $period_coeff)
+
+	$x = $prev_x
+	$i = 1
+	while $i <= steps
+	{
+		$x - $step_size
+		$y = -1 * calc_sin($x + $shift_angle, $amplitude, $period_coeff)
+		line($prev_x, $prev_y, $x, $y, $color)
+		line($prev_x, $prev_y, $x, $y, $color)
+		$prev_x = $x
+		$prev_y = $y
+		$i + 1
+	}
+}
+
+fn draw_connector($x, $y, $radius, $angle, $color) {
+	$radius_x = $x + cos($angle) * $radius
+	$radius_y = $y - sin($angle) * $radius
+	line(border_x, $radius_y, $radius_x, $radius_y, $color)
+}
+
+
+fn draw_radius($x, $y, $radius, $angle, $color) {
+	$radius_x = $x + cos($angle) * $radius
+	$radius_y = $y - sin($angle) * $radius
+	line($x, $y, $radius_x, $radius_y, $color)
+}
+
+fn draw_circle($x, $y, $radius, $color) {
+	$i = 1
+	$radius_x_prev = $x + cos(0) * $radius
+	$radius_y_prev = $y - sin(0) * $radius
+
+	while $i <= steps
+	{
+		$part = 1.0 * $i / steps
+		$angle = 2 * M_PI * $part
+		$radius_x = $x + cos($angle) * $radius
+		$radius_y = $y - sin($angle) * $radius
+		line($radius_x_prev, $radius_y_prev, $radius_x, $radius_y, $color)
+		$radius_x_prev = $radius_x
+		$radius_y_prev = $radius_y
+		$i + 1
+	}	
+}
